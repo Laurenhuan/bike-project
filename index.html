@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自行车稳定性的动力学分析 | Rotational Dynamics and Stability of Bicycle</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- KaTeX (High-quality math rendering) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- GSAP + ScrollTrigger -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon (inline SVG) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚲</text></svg>">
+
+    <!-- Meta -->
+    <meta name="theme-color" content="#0B1020">
+    <meta name="description" content="自行车稳定性的动力学分析 — 大学物理期末研讨汇报">
+</head>
+<body>
+
+    <!-- Presentation Mode Toggle -->
+    <button class="pres-toggle" id="presToggle" aria-label="切换答辩模式">
+        <span class="pres-toggle__dot"></span>
+        <span>答辩模式</span>
+    </button>
+
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="noise-overlay"></div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation Dots -->
+    <nav class="nav-dots" id="navDots">
+        <button class="nav-dot active" data-section="hero" data-label="首页" aria-label="跳转到首页"></button>
+        <button class="nav-dot" data-section="problem" data-label="问题" aria-label="跳转到问题提出"></button>
+        <button class="nav-dot" data-section="model" data-label="建模" aria-label="跳转到自行车建模"></button>
+        <button class="nav-dot" data-section="formulas" data-label="公式" aria-label="跳转到核心公式"></button>
+        <button class="nav-dot" data-section="spokes" data-label="辐条" aria-label="跳转到辐条分析"></button>
+        <button class="nav-dot" data-section="video" data-label="视频" aria-label="跳转到视频展示"></button>
+        <button class="nav-dot" data-section="stability" data-label="稳定性" aria-label="跳转到动态稳定性"></button>
+        <button class="nav-dot" data-section="conclusion" data-label="结论" aria-label="跳转到结论"></button>
+    </nav>
+
+    <!-- ============================================
+         Section 1: Hero
+         ============================================ -->
+    <section class="hero section" id="hero">
+        <div class="hero__canvas-container">
+            <canvas id="heroCanvas"></canvas>
+        </div>
+        <div class="hero__content">
+            <p class="hero__eyebrow">大学物理 · 期末研讨汇报</p>
+            <h1 class="hero__title"><span>自行车为什么不会倒？</span></h1>
+            <p class="hero__subtitle">从转动惯量到陀螺进动，探究两轮载具的稳定性之谜</p>
+            <p class="hero__en-subtitle">Rotational Dynamics and Stability of Bicycle</p>
+            <a href="#problem" class="hero__cta">
+                开始探索
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3v10M3 8l5 5 5-5"/>
+                </svg>
+            </a>
+        </div>
+        <div class="hero__scroll-hint" id="scrollHint">
+            <span>Scroll</span>
+            <div class="hero__scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- ============================================
+         Section 2: Problem Statement
+         ============================================ -->
+    <section class="section" id="problem">
+        <div class="container">
+            <p class="section__label reveal">01 — 问题提出</p>
+            <h2 class="section__title reveal">为什么速度越快越稳定？</h2>
+            <div class="divider reveal"></div>
+            <p class="section__subtitle reveal">
+                日常经验告诉我们：骑得慢容易摇晃，骑得快反而平稳。这个看似简单的现象背后，隐藏着深刻的物理学原理。
+            </p>
+
+            <div class="problem__grid">
+                <div class="problem__card reveal reveal--delay-1">
+                    <div class="problem__card-icon problem__card-icon--wobble">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                            <path d="M8 12l2-4 4 4-2 4"/>
+                        </svg>
+                    </div>
+                    <h3>低速行驶 — 摇晃不定</h3>
+                    <p>当自行车以低速行驶时，骑手需要不断调整身体重心来维持平衡。轻微的扰动就会导致明显的摇晃，甚至倾倒。这是因为低速下陀螺效应微弱，不足以提供有效的稳定力矩。</p>
+                </div>
+                <div class="problem__card reveal reveal--delay-2">
+                    <div class="problem__card-icon problem__card-icon--stable">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <h3>高速行驶 — 稳如磐石</h3>
+                    <p>当自行车加速到较高速度后，即使不刻意控制，车身也能自动保持直立。高速旋转的车轮产生了显著的陀螺效应，形成了强大的角动量，使系统具有抵抗外界干扰的能力。</p>
+                </div>
+            </div>
+
+            <div class="problem__question reveal">
+                <h3>核心问题：陀螺效应、角动量与自行车稳定性的定量关系是什么？</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+         Section 3: Bicycle Modeling
+         ============================================ -->
+    <section class="section" id="model">
+        <div class="container">
+            <p class="section__label reveal">02 — 自行车建模</p>
+            <h2 class="section__title reveal">车轮结构与参数</h2>
+            <div class="divider reveal"></div>
+            <p class="section__subtitle reveal">
+                将自行车车轮抽象为刚体力学模型，分析各组件对转动惯量的贡献。
+            </p>
+
+            <div class="model__layout">
+                <div class="model__diagram reveal--left" id="wheelDiagram">
+                    <!-- SVG wheel diagram rendered by JS -->
+                    <svg viewBox="0 0 400 400" id="wheelSVG">
+                        <!-- Outer rim -->
+                        <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" id="svgRim"/>
+                        <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+                        <!-- Tire highlight -->
+                        <circle cx="200" cy="200" r="175" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="6" id="svgTire"/>
+
+                        <!-- Hub -->
+                        <circle cx="200" cy="200" r="18" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" id="svgHub"/>
+                        <circle cx="200" cy="200" r="6" fill="rgba(0,212,255,0.3)" id="svgHubCenter"/>
+
+                        <!-- Spokes (will be generated by JS) -->
+                        <g id="svgSpokes"></g>
+
+                        <!-- Interactive labels -->
+                        <g id="svgLabels" opacity="0">
+                            <!-- Rim label -->
+                            <line x1="200" y1="30" x2="200" y2="10" stroke="rgba(0,212,255,0.5)" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="200" y="6" text-anchor="middle" fill="#00d4ff" font-family="JetBrains Mono" font-size="10">轮圈 R=0.33m</text>
+
+                            <!-- Hub label -->
+                            <line x1="218" y1="200" x2="260" y2="200" stroke="rgba(0,212,255,0.5)" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="264" y="204" fill="#00d4ff" font-family="JetBrains Mono" font-size="10">轮毂</text>
+
+                            <!-- Spoke label -->
+                            <line x1="280" y1="140" x2="320" y2="110" stroke="rgba(0,212,255,0.5)" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="324" y="108" fill="#00d4ff" font-family="JetBrains Mono" font-size="10">辐条</text>
+                        </g>
+                    </svg>
+                </div>
+
+                <div class="model__info-cards">
+                    <div class="model__info-card reveal reveal--delay-1" data-part="rim">
+                        <h4><span class="dot" style="background: var(--accent-cyan)"></span>轮圈 (Rim)</h4>
+                        <p>车轮的外环结构，是转动惯量的主要贡献者。由于质量分布在最大半径处，其对转动惯量的贡献最为显著。</p>
+                        <div class="formula-inline">$$I_{\text{rim}} = m_{\text{rim}} R^2$$</div>
+                    </div>
+                    <div class="model__info-card reveal reveal--delay-2" data-part="spoke">
+                        <h4><span class="dot" style="background: var(--accent-blue)"></span>辐条 (Spokes)</h4>
+                        <p>连接轮毂与轮圈的支撑结构。每根辐条可视为细长杆，其数量直接影响车轮的整体刚度与质量分布。</p>
+                        <div class="formula-inline">$$I_{\text{spoke}} = \frac{1}{3} m_{\text{spoke}} l^2$$</div>
+                    </div>
+                    <div class="model__info-card reveal reveal--delay-3" data-part="hub">
+                        <h4><span class="dot" style="background: var(--accent-purple)"></span>轮毂 (Hub)</h4>
+                        <p>位于车轮中心的旋转轴心部件。由于半径最小，对转动惯量的直接贡献有限，但承载了主要的轴承支撑功能。</p>
+                        <div class="formula-inline">$$I_{\text{hub}} = \frac{1}{2} m_{\text{hub}} r^2$$</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+         Section 4: Core Physics Formulas (Formula Modules)
+         ============================================ -->
+    <section class="section" id="formulas">
+        <div class="container">
+            <p class="section__label reveal">03 — 核心物理公式</p>
+            <h2 class="section__title reveal">旋转运动的两大定律</h2>
+            <div class="divider reveal"></div>
+            <p class="section__subtitle reveal">
+                理解自行车稳定性，只需掌握两个核心公式。它们揭示了力矩、转动惯量与角动量之间的深层联系。
+            </p>
+
+            <div class="formulas__grid">
+
+                <!-- Formula Module 1: τ = Iα -->
+                <div class="fm reveal" id="fm-torque">
+                    <div class="fm__layout">
+                        <div class="fm__body">
+                            <p class="fm__name">定轴转动定律 · Newton's 2nd Law for Rotation</p>
+
+                            <div class="fm__expr">
+                                $$\tau = I\alpha$$
+                            </div>
+
+                            <div class="fm__vars">
+                                <div class="fm__var" data-var="tau">
+                                    <span class="fm__var-dot" style="background: var(--accent-amber); color: var(--accent-amber);"></span>
+                                    <span class="fm__var-symbol">$\tau$</span>
+                                    <div class="fm__var-info">
+                                        <span class="fm__var-name">力矩 (Torque)</span>
+                                        <span class="fm__var-detail">单位: N·m</span>
+                                    </div>
+                                </div>
+                                <div class="fm__var" data-var="I">
+                                    <span class="fm__var-dot" style="background: var(--accent-cyan); color: var(--accent-cyan);"></span>
+                                    <span class="fm__var-symbol">$I$</span>
+                                    <div class="fm__var-info">
+                                        <span class="fm__var-name">转动惯量 (Inertia)</span>
+                                        <span class="fm__var-detail">单位: kg·m²</span>
+                                    </div>
+                                </div>
+                                <div class="fm__var" data-var="alpha">
+                                    <span class="fm__var-dot" style="background: var(--accent-green); color: var(--accent-green);"></span>
+                                    <span class="fm__var-symbol">$\alpha$</span>
+                                    <div class="fm__var-info">
+                                        <span class="fm__var-name">角加速度 (Angular Accel.)</span>
+                                        <span class="fm__var-detail">单位: rad/s²</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="fm__meaning">
+                                <p class="fm__meaning-label">物理意义</p>
+                                <p class="fm__meaning-text">
+                                    力矩是改变旋转状态的原因。对自行车而言，<strong>辐条越多 → 转动惯量 $I$ 越大 → 相同力矩下角加速度 $\alpha$ 越小</strong>，意味着车轮转速更难被外界干扰改变。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="fm__visual">
+                            <div class="fm__wheel fm__wheel--slow">
+                                <div class="fm__wheel-ring"></div>
+                                <div class="fm__wheel-ring fm__wheel-ring--inner"></div>
+                                <div class="fm__wheel-spokes" id="fmSpokes1"></div>
+                                <div class="fm__wheel-hub"></div>
+                            </div>
+                            <div class="fm__torque-arrow">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                                    <path d="M12 8v4l3 3"/>
+                                </svg>
+                                <span class="fm__torque-arrow-label">$\tau$ 施加力矩</span>
+                            </div>
+                            <div class="fm__omega-label">
+                                <span>$\alpha$ 角加速度</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formula Module 2: L = Iω -->
+                <div class="fm fm--reverse reveal" id="fm-angular">
+                    <div class="fm__layout">
+                        <div class="fm__body">
+                            <p class="fm__name">角动量定理 · Angular Momentum Theorem</p>
+
+                            <div class="fm__expr">
+                                $$L = I\omega$$
+                            </div>
+
+                            <div class="fm__vars">
+                                <div class="fm__var" data-var="L">
+                                    <span class="fm__var-dot" style="background: var(--accent-purple); color: var(--accent-purple);"></span>
+                                    <span class="fm__var-symbol">$L$</span>
+                                    <div class="fm__var-info">
+                                        <span class="fm__var-name">角动量 (Angular Mom.)</span>
+                                        <span class="fm__var-detail">单位: kg·m²/s</span>
+                                    </div>
+                                </div>
+                                <div class="fm__var" data-var="I2">
+                                    <span class="fm__var-dot" style="background: var(--accent-cyan); color: var(--accent-cyan);"></span>
+                                    <span class="fm__var-symbol">$I$</span>
+                                    <div class="fm__var-info">
+                                        <span class="fm__var-name">转动惯量 (Inertia)</span>
+                                        <span class="fm__var-detail">单位: kg·m²</span>
+                                    </div>
+                                </div>
+                                <div class="fm__var" data-var="omega">
+                                    <span class="fm__var-dot" style="background: var(--accent-blue); color: var(--accent-blue);"></span>
+                                    <span class="fm__var-symbol">$\omega$</span>
+                                    <div class="fm__var-info">
+                                        <span class="fm__var-name">角速度 (Angular Vel.)</span>
+                                        <span class="fm__var-detail">单位: rad/s</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="fm__meaning">
+                                <p class="fm__meaning-label">物理意义</p>
+                                <p class="fm__meaning-text">
+                                    角动量是旋转系统的"惯性"——<strong>角动量越大，外界力矩改变其方向就越困难</strong>。自行车高速行驶时，车轮角动量 $L$ 很大，这就是高速更稳定的根本原因。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="fm__visual">
+                            <div class="fm__wheel fm__wheel--fast">
+                                <div class="fm__wheel-ring"></div>
+                                <div class="fm__wheel-ring fm__wheel-ring--inner"></div>
+                                <div class="fm__wheel-spokes" id="fmSpokes2"></div>
+                                <div class="fm__wheel-hub"></div>
+                            </div>
+                            <div class="fm__torque-arrow">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 6v6l4 2"/>
+                                </svg>
+                                <span class="fm__torque-arrow-label">$L$ 角动量守恒</span>
+                            </div>
+                            <div class="fm__omega-label">
+                                <span>$\omega$ 高速旋转</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+         Section 5: Spoke Count Analysis
+         ============================================ -->
+    <section class="section" id="spokes">
+        <div class="container">
+            <p class="section__label reveal">04 — 辐条数影响分析</p>
+            <h2 class="section__title reveal">辐条数量如何影响稳定性？</h2>
+            <div class="divider reveal"></div>
+            <p class="section__subtitle reveal">
+                通过调节辐条数量，观察转动惯量、角加速度和角动量的实时变化。拖动滑块，感受参数之间的耦合关系。
+            </p>
+
+            <div class="spoke__layout">
+                <div class="spoke__controls reveal--left">
+                    <div class="spoke__slider-container">
+                        <div class="spoke__slider-label">
+                            <span>辐条数量</span>
+                            <span class="spoke__slider-value" id="spokeCountDisplay">32</span>
+                        </div>
+                        <input type="range" class="spoke__slider" id="spokeSlider"
+                               min="16" max="64" value="32" step="1">
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">16</span>
+                            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">64</span>
+                        </div>
+                    </div>
+
+                    <div class="spoke__metrics">
+                        <div class="spoke__metric">
+                            <div class="spoke__metric-label">转动惯量 I</div>
+                            <div class="spoke__metric-value spoke__metric-value--cyan" id="metricI">0.142</div>
+                            <div class="spoke__metric-unit">kg·m²</div>
+                        </div>
+                        <div class="spoke__metric">
+                            <div class="spoke__metric-label">角加速度 α</div>
+                            <div class="spoke__metric-value spoke__metric-value--blue" id="metricAlpha">7.04</div>
+                            <div class="spoke__metric-unit">rad/s²</div>
+                        </div>
+                        <div class="spoke__metric">
+                            <div class="spoke__metric-label">角动量 L</div>
+                            <div class="spoke__metric-value spoke__metric-value--purple" id="metricL">2.13</div>
+                            <div class="spoke__metric-unit">kg·m²/s</div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic wheel visualization -->
+                    <div class="spoke__wheel-viz">
+                        <svg class="spoke__wheel-svg" viewBox="0 0 220 220" id="spokeWheelSVG">
+                            <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(0,212,255,0.2)" stroke-width="2"/>
+                            <circle cx="110" cy="110" r="12" fill="rgba(0,212,255,0.1)" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+                            <g id="spokeWheelSpokes"></g>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="spoke__charts reveal--right">
+                    <div class="spoke__chart-container">
+                        <h4>转动惯量 I 随辐条数变化</h4>
+                        <canvas id="chartI"></canvas>
+                    </div>
+                    <div class="spoke__chart-container">
+                        <h4>角加速度 α 随辐条数变化</h4>
+                        <canvas id="chartAlpha"></canvas>
+                    </div>
+                    <div class="spoke__chart-container">
+                        <h4>角动量 L 随辐条数变化</h4>
+                        <canvas id="chartL"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+         Section 6: Video Showcase
+         ============================================ -->
+    <section class="section" id="video">
+        <div class="container">
+            <p class="section__label reveal">05 — 仿真与实验</p>
+            <h2 class="section__title reveal">动态仿真演示</h2>
+            <div class="divider reveal"></div>
+            <p class="section__subtitle reveal">
+                通过数值仿真与实验验证，直观展示自行车动力学行为。
+            </p>
+
+            <div class="video__grid">
+                <div class="video__card reveal reveal--delay-1">
+                    <div class="video__wrapper">
+                        <video controls preload="metadata" playsinline>
+                            <source src="./videos/video1.mp4" type="video/mp4">
+                            您的浏览器不支持视频播放。
+                        </video>
+                    </div>
+                    <div class="video__info">
+                        <h4>仿真演示一</h4>
+                        <p>自行车陀螺效应与进动行为的数值仿真</p>
+                    </div>
+                </div>
+                <div class="video__card reveal reveal--delay-2">
+                    <div class="video__wrapper">
+                        <video controls preload="metadata" playsinline>
+                            <source src="./videos/video2.mp4" type="video/mp4">
+                            您的浏览器不支持视频播放。
+                        </video>
+                    </div>
+                    <div class="video__info">
+                        <h4>仿真演示二</h4>
+                        <p>不同辐条配置下稳定性的对比实验</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+         Section 7: Dynamic Stability
+         ============================================ -->
+    <section class="section" id="stability">
+        <div class="container">
+            <p class="section__label reveal">06 — 动态稳定性分析</p>
+            <h2 class="section__title reveal">倾斜、进动与回正</h2>
+            <div class="divider reveal"></div>
+            <p class="section__subtitle reveal">
+                当自行车发生倾斜时，陀螺效应引发进动，产生恢复力矩，使系统自动回正。这一过程蕴含着角动量守恒的深刻物理。
+            </p>
+
+            <!-- Animated stability visualization -->
+            <div class="stability__visual reveal--scale">
+                <canvas class="stability__canvas" id="stabilityCanvas"></canvas>
+            </div>
+
+            <!-- Three phases -->
+            <div class="stability__phases">
+                <div class="stability__phase reveal reveal--delay-1">
+                    <div class="stability__phase-number">Phase 01</div>
+                    <div class="stability__phase-icon stability__phase-icon--tilt">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">
+                            <path d="M12 2v20M2 12l10-10 10 10"/>
+                        </svg>
+                    </div>
+                    <h3>倾斜 (Tilt)</h3>
+                    <p>外界扰动使车身偏离竖直方向，重力产生绕接触点的倾覆力矩，车轮角动量方向开始改变。</p>
+                </div>
+                <div class="stability__phase reveal reveal--delay-2">
+                    <div class="stability__phase-number">Phase 02</div>
+                    <div class="stability__phase-icon stability__phase-icon--precess">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 2a10 10 0 0 1 0 20"/>
+                            <path d="M2 12h20"/>
+                        </svg>
+                    </div>
+                    <h3>进动 (Precession)</h3>
+                    <p>根据角动量定理，倾覆力矩使角动量矢量发生方向改变：$$\frac{d\vec{L}}{dt} = \vec{\tau}$$ 产生绕竖直轴的进动。</p>
+                </div>
+                <div class="stability__phase reveal reveal--delay-3">
+                    <div class="stability__phase-number">Phase 03</div>
+                    <div class="stability__phase-icon stability__phase-icon--recover">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5" stroke-linecap="round">
+                            <path d="M12 22V2M2 12l10 10 10-10"/>
+                        </svg>
+                    </div>
+                    <h3>回正 (Recovery)</h3>
+                    <p>进动引起的前叉转向使车轮接触点移向倾斜方向下方，产生恢复力矩，最终使系统回到竖直平衡位置。</p>
+                </div>
+            </div>
+
+            <!-- Vector diagrams -->
+            <div class="stability__vectors reveal">
+                <div class="stability__vector">
+                    <svg class="stability__vector-arrow" viewBox="0 0 48 48">
+                        <defs>
+                            <marker id="arrowhead-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="#f87171"/>
+                            </marker>
+                        </defs>
+                        <line x1="24" y1="40" x2="24" y2="8" stroke="#f87171" stroke-width="2" marker-end="url(#arrowhead-red)"/>
+                    </svg>
+                    <div class="stability__vector-info">
+                        <h4>重力矩 $\vec{\tau}_g$</h4>
+                        <p>倾斜产生的倾覆力矩，方向垂直于倾斜平面</p>
+                    </div>
+                </div>
+                <div class="stability__vector">
+                    <svg class="stability__vector-arrow" viewBox="0 0 48 48">
+                        <defs>
+                            <marker id="arrowhead-cyan" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="#00d4ff"/>
+                            </marker>
+                        </defs>
+                        <line x1="8" y1="24" x2="40" y2="24" stroke="#00d4ff" stroke-width="2" marker-end="url(#arrowhead-cyan)"/>
+                    </svg>
+                    <div class="stability__vector-info">
+                        <h4>角动量 $\vec{L}$</h4>
+                        <p>车轮旋转产生的角动量，沿转轴方向</p>
+                    </div>
+                </div>
+                <div class="stability__vector">
+                    <svg class="stability__vector-arrow" viewBox="0 0 48 48">
+                        <defs>
+                            <marker id="arrowhead-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="#34d399"/>
+                            </marker>
+                        </defs>
+                        <path d="M24 40 Q 40 24 24 8" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+                    </svg>
+                    <div class="stability__vector-info">
+                        <h4>进动角速度 $\vec{\Omega}_p$</h4>
+                        <p>由力矩引起的角动量方向变化率</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+         Section 8: Conclusion
+         ============================================ -->
+    <section class="section" id="conclusion">
+        <div class="container">
+            <p class="section__label reveal">07 — 结论</p>
+            <h2 class="section__title reveal">研究总结</h2>
+            <div class="divider reveal"></div>
+
+            <div class="conclusion__cards">
+                <div class="conclusion__card reveal reveal--delay-1">
+                    <div class="conclusion__card-number">01</div>
+                    <h3>辐条数增加 → 转动惯量增大</h3>
+                    <p>更多辐条意味着更多质量分布在远离轴心的位置，根据 $$I = \sum m_i r_i^2$$ 转动惯量随之增加。</p>
+                </div>
+                <div class="conclusion__card reveal reveal--delay-2">
+                    <div class="conclusion__card-number">02</div>
+                    <h3>转动惯量增大 → 稳定性增强</h3>
+                    <p>由 $$L = I\omega$$ 可知，更大的转动惯量在相同角速度下产生更大的角动量，系统抵抗扰动的能力更强。</p>
+                </div>
+                <div class="conclusion__card reveal reveal--delay-3">
+                    <div class="conclusion__card-number">03</div>
+                    <h3>稳定性不仅来自陀螺效应</h3>
+                    <p>陀螺效应是重要因素，但自行车的自稳定性还依赖于前叉几何、质量分布等多因素的协同作用。</p>
+                </div>
+                <div class="conclusion__card reveal reveal--delay-4">
+                    <div class="conclusion__card-number">04</div>
+                    <h3>前叉拖曳距是关键因素</h3>
+                    <p>拖曳距（Trail）使前轮接地点位于转向轴延长线后方，倾斜时自动产生转向力矩，是自稳定的核心几何机制。</p>
+                </div>
+                <div class="conclusion__card reveal reveal--delay-5">
+                    <div class="conclusion__card-number">05</div>
+                    <h3>变速系统本质是力矩-速度权衡</h3>
+                    <p>变速器通过改变齿轮比，在力矩与角速度之间寻求最优平衡，本质上是对 $\tau = I\alpha$ 定律的工程应用。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Thank You -->
+    <section class="thankyou section" id="thankyou">
+        <div class="container">
+            <h2 class="thankyou__title reveal">Thank You</h2>
+            <div class="thankyou__line reveal"></div>
+            <p class="thankyou__subtitle reveal">自行车稳定性的动力学分析 · 大学物理期末研讨汇报</p>
+        </div>
+    </section>
+
+    <!-- Script -->
+    <script src="script.js"></script>
+</body>
+</html>
